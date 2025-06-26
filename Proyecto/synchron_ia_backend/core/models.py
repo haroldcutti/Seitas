@@ -1,10 +1,39 @@
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
 
-class Usuario(models.Model):
+class UsuarioManager(BaseUserManager):
+    def create_user(self, correo, nombre_usuario, password=None, **extra_fields):
+        if not correo:
+            raise ValueError('El correo es obligatorio')
+        correo = self.normalize_email(correo)
+        user = self.model(correo=correo, nombre_usuario=nombre_usuario, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, correo, nombre_usuario, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        return self.create_user(correo, nombre_usuario, password, **extra_fields)
+    
+class Usuario(AbstractBaseUser, PermissionsMixin):
+    ROL_CHOICES = [
+        ('administrador', 'Administrador'),
+        ('docente', 'Docente'),
+        ('alumno', 'Alumno'),
+    ]
+
+    correo = models.EmailField(unique=True)
     nombre_completo = models.CharField(max_length=100)
     nombre_usuario = models.CharField(max_length=50, unique=True)
-    correo = models.EmailField(unique=True)
-    contrasena = models.CharField(max_length=255)
+    rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='alumno')  
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+
+    objects = UsuarioManager()
+
+    USERNAME_FIELD = 'correo'
+    REQUIRED_FIELDS = ['nombre_usuario']
 
     def __str__(self):
         return self.nombre_usuario

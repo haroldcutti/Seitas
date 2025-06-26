@@ -1,4 +1,5 @@
 from django.urls import path, include
+from .views import obtener_roles 
 from rest_framework.routers import DefaultRouter
 from .views import *
 
@@ -14,4 +15,5 @@ router.register(r'recordatorios', RecordatorioViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
+    path('roles/', obtener_roles),
 ]
